@@ -1,0 +1,70 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+
+
+export LOG=/var/log/rc.local.log
+
+# Part of S0/Impulse to Volkszaehler 'RaspberryPI deamon'
+
+for i in 27 23 22 24 10 9
+#for i in 17 18 22 23 24 10
+do 
+  echo init gpio $i
+  echo init gpio $i >>$LOG
+  echo $i > /sys/class/gpio/export 2>>$LOG && echo "in" > /sys/class/gpio/gpio$i/direction 2>>$LOG && echo "rising" > /sys/class/gpio/gpio$i/edge 2>>$LOG
+done
+
+## Test für RGr - just ignore
+#for i in 24 10 9 
+#do
+#  echo $i > /sys/class/gpio/export && echo "in" > /sys/class/gpio/gpio$i/direction && echo "falling" > /sys/class/gpio/gpio$i/edge
+#done
+
+##for extension with Relais
+for i in 11 8 7 
+do
+  echo init gpio $i
+  echo init gpio $i >>$LOG
+  echo $i > /sys/class/gpio/export 2>>$LOG
+  echo "out" > /sys/class/gpio/gpio$i/direction 2>>$LOG
+  chmod -R a+w /sys/class/gpio/gpio$i/ 2>>$LOG
+done
+
+# Part of DS2482 I2C 1-Wire Master to Volkszaehler 'RaspberryPI daemon'.
+
+#echo init Raspberry Rev1
+#echo init Raspberry Rev1 >>$LOG
+#echo ds2482 0x18 > /sys/bus/i2c/devices/i2c-0/new_device
+#echo ds2482 0x19 > /sys/bus/i2c/devices/i2c-0/new_device
+#echo ds2482 0x1a > /sys/bus/i2c/devices/i2c-0/new_device
+
+echo init Raspberry Rev2
+echo init Raspberry Rev2 >>$LOG
+echo ds2482 0x18 > /sys/bus/i2c/devices/i2c-1/new_device 2>>$LOG
+#echo ds2482 0x19 > /sys/bus/i2c/devices/i2c-1/new_device 2>>$LOG
+#echo ds2482 0x1a > /sys/bus/i2c/devices/i2c-1/new_device 2>>$LOG
+
+echo owfs
+echo owfs >>$LOG
+owfs >>$LOG 2>>$LOG
+
+echo $(date) - durchgelaufen >>$LOG
+echo $(date) >>/tmp/rc.local-durchgelaufen
+exit 0
